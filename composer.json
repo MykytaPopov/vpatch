@@ -1,0 +1,23 @@
+{
+    "name": "mykytapopov/vpatch",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mykyta Popov",
+            "email": "mr.mykyta.popov@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {
+        "symfony/finder": "*",
+        "symfony/console": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "MykytaPopov\\VPatch\\": "src/"
+        }
+    },
+    "bin": ["bin/vpatch"]
+}
