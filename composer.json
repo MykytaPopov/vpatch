@@ -8,10 +8,7 @@
             "email": "mr.mykyta.popov@gmail.com"
         }
     ],
-    "require": {
-        "symfony/finder": "*",
-        "symfony/console": "*"
-    },
+    "require": {},
     "autoload": {
         "psr-4": {
             "MykytaPopov\\VPatch\\": "src/"
