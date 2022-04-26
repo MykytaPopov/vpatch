@@ -82,7 +82,7 @@ class Generate extends Command
                 $message = $e->getMessage();
                 $colors = [
                     1 => 'error',
-                    2 => 'comment'
+                    2 => 'comment',
                 ];
                 $color = $colors[$e->getCode()];
                 $output->writeln("<{$color}>$message</{$color}>");

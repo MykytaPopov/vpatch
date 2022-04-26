@@ -1,15 +1,16 @@
 <?php
+
 declare(strict_types=1);
 
 namespace MykytaPopov\VPatch;
-
-use MykytaPopov\VPatch\Command\Generate;
 
 class Finder
 {
     /**
      * Find files with
+     *
      * @param string $path
+     *
      * @return array
      */
     public function getOldFiles(string $path, string $extension): array
