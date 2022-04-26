@@ -8,8 +8,6 @@
             "email": "mr.mykyta.popov@gmail.com"
         }
     ],
-    "minimum-stability": "dev",
-    "prefer-stable": true,
     "require": {
         "symfony/finder": "*",
         "symfony/console": "*"
@@ -19,5 +17,7 @@
             "MykytaPopov\\VPatch\\": "src/"
         }
     },
-    "bin": ["bin/vpatch"]
+    "bin": ["bin/vpatch"],
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
