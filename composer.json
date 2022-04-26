@@ -14,7 +14,5 @@
             "MykytaPopov\\VPatch\\": "src/"
         }
     },
-    "bin": ["bin/vpatch"],
-    "minimum-stability": "dev",
-    "prefer-stable": true
+    "bin": ["bin/vpatch"]
 }
