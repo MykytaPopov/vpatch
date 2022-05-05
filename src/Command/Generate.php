@@ -64,34 +64,66 @@ class Generate extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $jsonString = file_get_contents('composer.json');
+        $data = json_decode($jsonString, true);
+
+        $data['extra']['patches'][] = "TENNIS";
+
+        $newJsonString = json_encode($data);
+        file_put_contents('composer.json', $newJsonString);
+
+
+        die;
+
         $cwd = getcwd();
         if (!$this->pathResolver->checkCWD($cwd)) {
             $output->writeln(
                 '<error>Can\'t resolve vendor and composer.json path, command should be executed from the project root dir</error>'
             );
 
-            return Command::FAILURE;
+            return 1;
         }
 
         $filesToCompare = $this->finder->findFilesToCompare($cwd . '/vpatch');
 
         /** @var SplFileInfo $file */
         foreach ($filesToCompare as $key => $file) {
-            $vpatchPath = 'vpatch/' . $file->getRelativePathname();
             $vendorPath = 'vendor/' . $file->getRelativePathname();
+            $modPath = 'vpatch/' . $file->getRelativePathname();
+            $diffPath = $modPath . '.diff';
 
-            $output->writeln("<comment>vpatch modification found:</comment> {$vpatchPath}");
-            
+            $output->writeln("<comment>vpatch modification found:</comment> {$modPath}");
+
             if (!file_exists($vendorPath)) {
                 $output->writeln("<error>vendor origin missed, please check the path:</error> {$vendorPath}");
                 unset($filesToCompare[$key]);
-                
+
                 continue;
             }
-            
+
             $output->writeln("<info>vendor origin found:</info> {$vendorPath}");
-            
-            
+
+            if (file_exists($diffPath)) {
+                $command = "patch -R $vendorPath < $diffPath";
+                $out = null;
+                $status = null;
+                exec($command, $out, $status);
+            }
+
+            $diff = $this->differ->compare($modPath, $vendorPath);
+
+            if ($diff === '') {
+                $output->writeln("<comment>diff is empty</comment>");
+
+                if (file_exists($diffPath)) {
+                    unlink($diffPath);
+                    $output->writeln("<error>remove diff:</error> $diffPath");
+                }
+
+                continue;
+            }
+
+            $result = file_put_contents($diffPath, $diff);
         }
 
 //        $oldFiles = $this->finder->getOldFiles($input->getOption('path') . '/vendor', $this->extension);
@@ -112,7 +144,7 @@ class Generate extends Command
 //            $output->writeln('==========');
 //        }
 //
-        return Command::SUCCESS;
+        return 0;
     }
 
     /**
