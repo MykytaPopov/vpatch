@@ -11,6 +11,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Finder\SplFileInfo;
 
 class Generate extends Command
 {
@@ -72,24 +73,45 @@ class Generate extends Command
             return Command::FAILURE;
         }
 
-        $oldFiles = $this->finder->getOldFiles($input->getOption('path') . '/vendor', $this->extension);
-        foreach ($oldFiles as $oldFilePath) {
-            $output->writeln("<info>found old: {$oldFilePath}</info>");
-            try {
-                $patchPath = $this->generatePatch($cwd, (string)$oldFilePath);
-                $output->writeln("<info>generated patch: {$patchPath}</info>");
-            } catch (\Exception $e) {
-                $message = $e->getMessage();
-                $colors = [
-                    1 => 'error',
-                    2 => 'comment',
-                ];
-                $color = $colors[$e->getCode()];
-                $output->writeln("<{$color}>$message</{$color}>");
+        $filesToCompare = $this->finder->findFilesToCompare($cwd . '/vpatch');
+
+        /** @var SplFileInfo $file */
+        foreach ($filesToCompare as $key => $file) {
+            $vpatchPath = 'vpatch/' . $file->getRelativePathname();
+            $vendorPath = 'vendor/' . $file->getRelativePathname();
+
+            $output->writeln("<comment>vpatch modification found:</comment> {$vpatchPath}");
+            
+            if (!file_exists($vendorPath)) {
+                $output->writeln("<error>vendor origin missed, please check the path:</error> {$vendorPath}");
+                unset($filesToCompare[$key]);
+                
+                continue;
             }
-            $output->writeln('==========');
+            
+            $output->writeln("<info>vendor origin found:</info> {$vendorPath}");
+            
+            
         }
 
+//        $oldFiles = $this->finder->getOldFiles($input->getOption('path') . '/vendor', $this->extension);
+//        foreach ($oldFiles as $oldFilePath) {
+//            $output->writeln("<info>found old: {$oldFilePath}</info>");
+//            try {
+//                $patchPath = $this->generatePatch($cwd, (string)$oldFilePath);
+//                $output->writeln("<info>generated patch: {$patchPath}</info>");
+//            } catch (\Exception $e) {
+//                $message = $e->getMessage();
+//                $colors = [
+//                    1 => 'error',
+//                    2 => 'comment',
+//                ];
+//                $color = $colors[$e->getCode()];
+//                $output->writeln("<{$color}>$message</{$color}>");
+//            }
+//            $output->writeln('==========');
+//        }
+//
         return Command::SUCCESS;
     }
 

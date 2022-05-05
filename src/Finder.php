@@ -41,4 +41,17 @@ class Finder
 
         return iterator_to_array($iterator);
     }
+
+    public function findFilesToCompare(string $path): array
+    {
+        $symfonyFinder = new \Symfony\Component\Finder\Finder();
+
+        $iterator = $symfonyFinder
+            ->files()
+            ->in($path)
+            ->exclude('composer/')
+            ->notName('*.diff');
+
+        return iterator_to_array($iterator);
+    }
 }
