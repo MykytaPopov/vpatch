@@ -1,10 +1,34 @@
 #!/usr/bin/env php
 <?php
 
-require_once __DIR__ . '/../../../autoload.php';
+declare(strict_types=1);
 
-$application = new Symfony\Component\Console\Application;
+use MykytaPopov\VPatch\Command\GenerateCommand;
+use Symfony\Component\Config\FileLocator;
+use Symfony\Component\Console\Application;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 
-$application->add(new \MykytaPopov\VPatch\Command\Generate());
+$autoloads = [
+    '../../../autoload.php',
+    'vendor/autoload.php',
+];
+
+foreach ($autoloads as $autoload) {
+    if (!file_exists($autoload)) {
+        continue;
+    }
+
+    require_once $autoload;
+}
+
+$container = new ContainerBuilder();
+$loader = new YamlFileLoader($container, new FileLocator(dirname(__DIR__) . '/config'));
+$loader->load('services.yaml');
+$container->compile();
+
+$application = $container->get(Application::class);
+
+$application->add($container->get(GenerateCommand::class));
 
 $application->run();

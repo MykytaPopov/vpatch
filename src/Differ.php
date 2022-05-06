@@ -4,26 +4,21 @@ declare(strict_types=1);
 
 namespace MykytaPopov\VPatch;
 
-class Differ
+class Differ implements DifferInterface
 {
-    private PathResolver $pathResolver;
+    private PathResolverInterface $pathResolver;
 
-    public function __construct()
+    public function __construct(PathResolverInterface $pathResolver)
     {
-        $this->pathResolver = new PathResolver();
+        $this->pathResolver = $pathResolver;
     }
 
     /**
-     * Compare two files
-     *
-     * @param string $modefiedFileName Modified file name
-     * @param string $originFileName Origin file name from the vendor
-     *
-     * @return string
+     * @inheritdoc
      */
-    public function compare(string $modefiedFileName, string $originFileName): string
+    public function compare(string $modifiedFileName, string $originFileName): string
     {
-        $command = "git diff --no-index {$originFileName} {$modefiedFileName}";
+        $command = "git diff --no-index {$originFileName} {$modifiedFileName}";
 
         $stdOut = shell_exec($command);
 
@@ -31,7 +26,7 @@ class Differ
             return '';
         }
 
-        return $this->clearDiff($stdOut, $modefiedFileName, $originFileName);
+        return $this->clearDiff($stdOut, $modifiedFileName, $originFileName);
     }
 
     /**

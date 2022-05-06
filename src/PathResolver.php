@@ -4,14 +4,10 @@ declare(strict_types=1);
 
 namespace MykytaPopov\VPatch;
 
-class PathResolver
+class PathResolver implements PathResolverInterface
 {
     /**
-     * Check if current working dir is root of the project and there are vendor with composer.json
-     *
-     * @param string $cwd Current working dir
-     *
-     * @return bool
+     * @inheritdoc
      */
     public function checkCWD(string $cwd): bool
     {
@@ -25,27 +21,7 @@ class PathResolver
     }
 
     /**
-     * Get destination path to save patches
-     *
-     * @param string $cwd Current working dir
-     * @param string $oldFilePath old fine path
-     *
-     * @return string
-     */
-    public function getDestination(string $cwd, string $oldFilePath): string
-    {
-        $destinationPath = $cwd . '/patches';
-        if (!file_exists($destinationPath)) {
-            mkdir($destinationPath);
-        }
-
-        return $destinationPath . '/' . pathinfo($oldFilePath, PATHINFO_FILENAME) . '.patch';
-    }
-
-    /**
-     * @param string $path
-     *
-     * @return string
+     * @inheritdoc
      */
     public function parseRelativePath(string $path): string
     {
@@ -55,9 +31,7 @@ class PathResolver
     }
 
     /**
-     * @param string $path
-     *
-     * @return string
+     * @inheritdoc
      */
     public function parseVendorPackageNames(string $path): string
     {

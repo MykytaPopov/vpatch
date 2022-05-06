@@ -4,14 +4,10 @@ declare(strict_types=1);
 
 namespace MykytaPopov\VPatch;
 
-use Symfony\Component\Finder\SplFileInfo;
-
-class Finder
+class Finder implements FinderInterface
 {
     /**
-     * @param string $path Where to look for files
-     *
-     * @return SplFileInfo[]
+     * @inheritdoc
      */
     public function findFilesToCompare(string $path): array
     {

@@ -4,25 +4,25 @@ declare(strict_types=1);
 
 namespace MykytaPopov\VPatch\Command;
 
-use MykytaPopov\VPatch\Differ;
-use MykytaPopov\VPatch\Finder;
-use MykytaPopov\VPatch\PathResolver;
+use MykytaPopov\VPatch\DifferInterface;
+use MykytaPopov\VPatch\FinderInterface;
+use MykytaPopov\VPatch\PathResolverInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
-class Generate extends Command
+class GenerateCommand extends Command
 {
     /** @inerhitDoc */
     protected static $defaultName = 'generate';
 
-    private Finder $finder;
+    private FinderInterface $finder;
 
-    private Differ $differ;
+    private DifferInterface $differ;
 
-    private PathResolver $pathResolver;
+    private PathResolverInterface $pathResolver;
 
     private Filesystem $fileSystem;
 
@@ -31,12 +31,17 @@ class Generate extends Command
     /**
      * @inheritdoc
      */
-    public function __construct(string $name = null)
-    {
-        $this->finder = new Finder();
-        $this->differ = new Differ();
-        $this->fileSystem = new Filesystem();
-        $this->pathResolver = new PathResolver();
+    public function __construct(
+        FinderInterface $finder,
+        DifferInterface $differ,
+        PathResolverInterface $pathResolver,
+        Filesystem $fileSystem,
+        string $name = null
+    ) {
+        $this->finder = $finder;
+        $this->differ = $differ;
+        $this->fileSystem = $fileSystem;
+        $this->pathResolver = $pathResolver;
 
         parent::__construct($name);
     }
@@ -49,18 +54,17 @@ class Generate extends Command
         $this->setDescription('Generate patch for vendor');
 
         $this->addOption(
-                'force',
-                'f',
-                InputOption::VALUE_NONE,
-                'Generate new diff even if it already exists (not safe, old data could be lost)'
-            )
-        ;
+            'force',
+            'f',
+            InputOption::VALUE_NONE,
+            'Generate new diff even if it already exists (not safe, old data could be lost)'
+        );
     }
 
     /**
      * @inheritdoc
      */
-    protected function execute(InputInterface $input, OutputInterface $output, $input1): int
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $cwd = getcwd();
         if (!$this->pathResolver->checkCWD($cwd)) {
@@ -69,7 +73,7 @@ class Generate extends Command
                 OutputInterface::VERBOSITY_QUIET
             );
 
-            return 1;
+            return self::FAILURE;
         }
 
         foreach ($this->finder->findFilesToCompare($cwd . '/vpatch') as $file) {
@@ -82,7 +86,7 @@ class Generate extends Command
             $output->writeln("<info>mask:</info> {$maskFilePath}");
 
             $diffFilePath = $maskFilePath . '.diff';
-            if (file_exists($diffFilePath) && !$input1->getOption('force')) {
+            if (file_exists($diffFilePath) && !$input->getOption('force')) {
                 $output->writeln(["<comment>diff already exists:</comment> {$diffFilePath}", $this->separator]);
 
                 continue;
@@ -105,6 +109,6 @@ class Generate extends Command
 
         $output->writeln('<info>done</info>');
 
-        return 0;
+        return self::SUCCESS;
     }
 }
