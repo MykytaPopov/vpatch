@@ -6,6 +6,13 @@ namespace MykytaPopov\VPatch;
 
 class Differ
 {
+    private PathResolver $pathResolver;
+
+    public function __construct()
+    {
+        $this->pathResolver = new PathResolver();
+    }
+
     /**
      * Compare two files
      *
@@ -38,9 +45,8 @@ class Differ
      */
     private function clearDiff(string $diff, string $modifiedFileName, string $originFileName): string
     {
-        preg_match('#vendor\/[^\/]+\/[^\/]+\/(?<localPath>.*?)$#is', $originFileName, $matches);
-        $localPath = $matches['localPath'];
+        $relativePath = $this->pathResolver->parseRelativePath($originFileName);
 
-        return str_replace([$originFileName, $modifiedFileName], $localPath, $diff);
+        return str_replace([$originFileName, $modifiedFileName], $relativePath, $diff);
     }
 }

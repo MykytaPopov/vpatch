@@ -8,171 +8,103 @@ use MykytaPopov\VPatch\Differ;
 use MykytaPopov\VPatch\Finder;
 use MykytaPopov\VPatch\PathResolver;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Finder\SplFileInfo;
+use Symfony\Component\Filesystem\Filesystem;
 
 class Generate extends Command
 {
-    /**
-     * @inerhitDoc
-     */
+    /** @inerhitDoc */
     protected static $defaultName = 'generate';
 
-    /**
-     * @inerhitDoc
-     */
-    protected static $defaultDescription = 'Generate patch for vendor';
+    private Finder $finder;
+
+    private Differ $differ;
+
+    private PathResolver $pathResolver;
+
+    private Filesystem $fileSystem;
+
+    private string $separator = '================================';
 
     /**
-     * The extension of files with origin content
-     *
-     * @var string
+     * @inheritdoc
      */
-    private $extension = 'old';
-
-    /**
-     * @var Finder
-     */
-    private $finder;
-
-    /**
-     * @var Differ
-     */
-    private $differ;
-
-    /**
-     * @var PathResolver
-     */
-    private $pathResolver;
-
     public function __construct(string $name = null)
     {
         $this->finder = new Finder();
         $this->differ = new Differ();
+        $this->fileSystem = new Filesystem();
         $this->pathResolver = new PathResolver();
 
         parent::__construct($name);
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function configure()
     {
-        $descPath = 'search path to the dir or direct path to file';
-        $this->addOption('path', [], InputArgument::OPTIONAL, $descPath, getcwd());
+        $this->setDescription('Generate patch for vendor');
+
+        $this->addOption(
+                'force',
+                'f',
+                InputOption::VALUE_NONE,
+                'Generate new diff even if it already exists (not safe, old data could be lost)'
+            )
+        ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output): int
+    /**
+     * @inheritdoc
+     */
+    protected function execute(InputInterface $input, OutputInterface $output, $input1): int
     {
-        $jsonString = file_get_contents('composer.json');
-        $data = json_decode($jsonString, true);
-
-        $data['extra']['patches'][] = "TENNIS";
-
-        $newJsonString = json_encode($data);
-        file_put_contents('composer.json', $newJsonString);
-
-
-        die;
-
         $cwd = getcwd();
         if (!$this->pathResolver->checkCWD($cwd)) {
             $output->writeln(
-                '<error>Can\'t resolve vendor and composer.json path, command should be executed from the project root dir</error>'
+                "<error>can't find vendor and composer.json, run command from the project root</error>",
+                OutputInterface::VERBOSITY_QUIET
             );
 
             return 1;
         }
 
-        $filesToCompare = $this->finder->findFilesToCompare($cwd . '/vpatch');
+        foreach ($this->finder->findFilesToCompare($cwd . '/vpatch') as $file) {
+            $output->writeln(
+                "<comment>Working on file:</comment> {$file->getPath()}",
+                OutputInterface::VERBOSITY_DEBUG
+            );
 
-        /** @var SplFileInfo $file */
-        foreach ($filesToCompare as $key => $file) {
-            $vendorPath = 'vendor/' . $file->getRelativePathname();
-            $modPath = 'vpatch/' . $file->getRelativePathname();
-            $diffPath = $modPath . '.diff';
+            $maskFilePath = 'vpatch/' . $file->getRelativePathname();
+            $output->writeln("<info>mask:</info> {$maskFilePath}");
 
-            $output->writeln("<comment>vpatch modification found:</comment> {$modPath}");
-
-            if (!file_exists($vendorPath)) {
-                $output->writeln("<error>vendor origin missed, please check the path:</error> {$vendorPath}");
-                unset($filesToCompare[$key]);
-
-                continue;
-            }
-
-            $output->writeln("<info>vendor origin found:</info> {$vendorPath}");
-
-            if (file_exists($diffPath)) {
-                $command = "patch -R $vendorPath < $diffPath";
-                $out = null;
-                $status = null;
-                exec($command, $out, $status);
-            }
-
-            $diff = $this->differ->compare($modPath, $vendorPath);
-
-            if ($diff === '') {
-                $output->writeln("<comment>diff is empty</comment>");
-
-                if (file_exists($diffPath)) {
-                    unlink($diffPath);
-                    $output->writeln("<error>remove diff:</error> $diffPath");
-                }
+            $diffFilePath = $maskFilePath . '.diff';
+            if (file_exists($diffFilePath) && !$input1->getOption('force')) {
+                $output->writeln(["<comment>diff already exists:</comment> {$diffFilePath}", $this->separator]);
 
                 continue;
             }
 
-            $result = file_put_contents($diffPath, $diff);
+            $vendorFilePath = 'vendor/' . $file->getRelativePathname();
+            if (!file_exists($vendorFilePath)) {
+                $output->writeln(["<error>missing:</error> {$vendorFilePath}", $this->separator]);
+
+                continue;
+            }
+
+            $diff = $this->differ->compare($maskFilePath, $vendorFilePath);
+            $output->writeln('<comment>diff:</comment>' . PHP_EOL . $diff, OutputInterface::VERBOSITY_DEBUG);
+
+            $this->fileSystem->dumpFile($diffFilePath, $diff);
+
+            $output->writeln(["<info>diff:</info> {$diffFilePath}", $this->separator]);
         }
 
-//        $oldFiles = $this->finder->getOldFiles($input->getOption('path') . '/vendor', $this->extension);
-//        foreach ($oldFiles as $oldFilePath) {
-//            $output->writeln("<info>found old: {$oldFilePath}</info>");
-//            try {
-//                $patchPath = $this->generatePatch($cwd, (string)$oldFilePath);
-//                $output->writeln("<info>generated patch: {$patchPath}</info>");
-//            } catch (\Exception $e) {
-//                $message = $e->getMessage();
-//                $colors = [
-//                    1 => 'error',
-//                    2 => 'comment',
-//                ];
-//                $color = $colors[$e->getCode()];
-//                $output->writeln("<{$color}>$message</{$color}>");
-//            }
-//            $output->writeln('==========');
-//        }
-//
+        $output->writeln('<info>done</info>');
+
         return 0;
-    }
-
-    /**
-     * Generate patch from the old file
-     *
-     * @param string $cwd Current working dir to generate destination
-     * @param string $oldFilePath Old file path to generate destination
-     *
-     * @return string Generated patch file path
-     * @throws \Exception
-     */
-    private function generatePatch(string $cwd, string $oldFilePath): string
-    {
-        $originFilePath = substr($oldFilePath, 0, -4);
-
-        $diff = $this->differ->compare($originFilePath, $oldFilePath);
-
-        if (empty($diff)) {
-            throw new \Exception('skip - no difference: ' . $originFilePath . ' -> ' . $oldFilePath, 2);
-        }
-
-        $patchPath = $this->pathResolver->getDestination($cwd, $oldFilePath);
-        $result = file_put_contents($patchPath, $diff);
-
-        if (!$result) {
-            throw new \Exception('fail - file was not saved: ' . $patchPath, 1);
-        }
-
-        return $patchPath;
     }
 }

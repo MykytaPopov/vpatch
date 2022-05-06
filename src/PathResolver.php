@@ -41,4 +41,28 @@ class PathResolver
 
         return $destinationPath . '/' . pathinfo($oldFilePath, PATHINFO_FILENAME) . '.patch';
     }
+
+    /**
+     * @param string $path
+     *
+     * @return string
+     */
+    public function parseRelativePath(string $path): string
+    {
+        preg_match('/vendor\/[^\/]+\/[^\/]+\/(?<relativePath>.*?)$/is', $path, $matches);
+
+        return $matches['relativePath'];
+    }
+
+    /**
+     * @param string $path
+     *
+     * @return string
+     */
+    public function parseVendorPackageNames(string $path): string
+    {
+        preg_match('/vendor\/(?<vendorPackageName>.*?\/.*?)\//is', $path, $matches);
+
+        return $matches['vendorPackageName'];
+    }
 }
