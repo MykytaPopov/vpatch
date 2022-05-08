@@ -9,33 +9,29 @@ class PathResolver implements PathResolverInterface
     /**
      * @inheritdoc
      */
-    public function checkCWD(string $cwd): bool
-    {
-        $vendorPath = $cwd . '/vendor';
-        $vendor = file_exists($vendorPath) && !is_file($vendorPath);
-
-        $composerJsonPath = $cwd . '/composer.json';
-        $composerJson = file_exists($composerJsonPath) && is_file($composerJsonPath);
-
-        return $vendor && $composerJson;
-    }
-
-    /**
-     * @inheritdoc
-     */
     public function parseRelativePath(string $path): string
     {
-        preg_match('/vendor\/[^\/]+\/[^\/]+\/(?<relativePath>.*?)$/is', $path, $matches);
+        preg_match('/vendor(?!.*vendor)\/[^\/]+\/[^\/]+\/(?<relativePath>.*?)$/is', $path, $matches);
+
+        if (empty($matches['relativePath'])) {
+            throw new \Exception('can\'t resolve vendor path');
+        }
 
         return $matches['relativePath'];
     }
 
     /**
      * @inheritdoc
+     *
+     * @throws \Exception
      */
-    public function parseVendorPackageNames(string $path): string
+    public function parseVendorPackageName(string $path): string
     {
-        preg_match('/vendor\/(?<vendorPackageName>.*?\/.*?)\//is', $path, $matches);
+        preg_match('/vendor(?!.*vendor)\/(?<vendorPackageName>.*?\/.*?)\//is', $path, $matches);
+
+        if (empty($matches['vendorPackageName'])) {
+            throw new \Exception('can\'t resolve vendor package name');
+        }
 
         return $matches['vendorPackageName'];
     }

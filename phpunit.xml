@@ -2,8 +2,8 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/6.3/phpunit.xsd"
         backupGlobals="true"
-        backupStaticAttributes="false"
-        bootstrap="/path/to/bootstrap.php"
+        bootstrap="config/bootstrap.php"
+        colors="true"
 >
     <testsuites>
         <testsuite name="My Test Suite">

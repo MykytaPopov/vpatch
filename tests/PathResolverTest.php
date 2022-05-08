@@ -9,18 +9,49 @@ use PHPUnit\Framework\TestCase;
 
 class PathResolverTest extends TestCase
 {
-    public function testCheckCWD()
+    private PathResolver $pathResolver;
+
+    /**
+     * @inheritdoc
+     */
+    protected function setUp(): void
     {
-        $this->assertTrue(true);
+        $this->pathResolver = new PathResolver();
     }
 
-    public function testParseVendorPackageNames()
+    public function testParseVendorPackageNames(): void
     {
-        $this->fail();
+        $vendorPackageNames = 'mykytapopov/vpatch';
+        $path = '/var/www/mysite/vendor/some/package/vendor/' . $vendorPackageNames . '/bin/vpatch.php';
+
+        $result = $this->pathResolver->parseVendorPackageName($path);
+
+        $this->assertEquals($vendorPackageNames, $result, 'can\'t resolve relative path');
     }
 
-    public function testParseRelativePath()
+    public function testParseVendorPackageNamesUnableToParse(): void
     {
-        $this->fail();
+        $path = '/some/wrong/path/index.php';
+
+        $this->expectExceptionMessage('can\'t resolve vendor package name');
+        $this->pathResolver->parseVendorPackageName($path);
+    }
+
+    public function testParseRelativePath(): void
+    {
+        $relativePath = 'bin/vpatch.php';
+        $path = '/var/www/mysite/vendor/some/package/vendor/mykytapopov/vpatch/' . $relativePath;
+
+        $result = $this->pathResolver->parseRelativePath($path);
+
+        $this->assertEquals($relativePath, $result);
+    }
+
+    public function testParseRelativePathUnableToParse(): void
+    {
+        $path = '/some/wrong/path/index.php';
+
+        $this->expectExceptionMessage('can\'t resolve vendor path');
+        $this->pathResolver->parseRelativePath($path);
     }
 }

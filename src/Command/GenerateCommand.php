@@ -7,13 +7,12 @@ namespace MykytaPopov\VPatch\Command;
 use MykytaPopov\VPatch\DifferInterface;
 use MykytaPopov\VPatch\FinderInterface;
 use MykytaPopov\VPatch\PathResolverInterface;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
-class GenerateCommand extends Command
+class GenerateCommand extends AbstractCommand
 {
     /** @inerhitDoc */
     protected static $defaultName = 'generate';
@@ -22,11 +21,10 @@ class GenerateCommand extends Command
 
     private DifferInterface $differ;
 
-    private PathResolverInterface $pathResolver;
-
     private Filesystem $fileSystem;
 
-    private string $separator = '================================';
+    /** @var string Target dir with in origin files related to vendor */
+    private string $targetDir = 'vpatch';
 
     /**
      * @inheritdoc
@@ -34,14 +32,12 @@ class GenerateCommand extends Command
     public function __construct(
         FinderInterface $finder,
         DifferInterface $differ,
-        PathResolverInterface $pathResolver,
         Filesystem $fileSystem,
         string $name = null
     ) {
         $this->finder = $finder;
         $this->differ = $differ;
         $this->fileSystem = $fileSystem;
-        $this->pathResolver = $pathResolver;
 
         parent::__construct($name);
     }
@@ -51,6 +47,8 @@ class GenerateCommand extends Command
      */
     protected function configure()
     {
+        $this->cwd = getcwd();
+
         $this->setDescription('Generate patch for vendor');
 
         $this->addOption(
@@ -66,19 +64,18 @@ class GenerateCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $cwd = getcwd();
-        if (!$this->pathResolver->checkCWD($cwd)) {
-            $output->writeln(
-                "<error>can't find vendor and composer.json, run command from the project root</error>",
-                OutputInterface::VERBOSITY_QUIET
-            );
+        parent::execute($input, $output);
+
+        $omissions = $this->checkEnvironment();
+        if ($omissions) {
+            $format = '<error>Missing files or directories: %s. Run command from the project root.</error>';
+            $output->writeln(sprintf($format, implode(', ', $omissions)));
 
             return self::FAILURE;
         }
 
-        $files = $this->finder->findFilesToCompare($cwd . '/vpatch');
+        $files = $this->finder->findFilesToCompare($this->cwd . '/vpatch');
 
-        var_dump($files);
         foreach ($files as $file) {
             $output->writeln(
                 "<comment>Working on file:</comment> {$file->getPath()}",
@@ -102,7 +99,7 @@ class GenerateCommand extends Command
                 continue;
             }
 
-            $diff = $this->differ->compare($maskFilePath, $vendorFilePath);
+            $diff = $this->differ->compare($vendorFilePath, $maskFilePath);
             $output->writeln('<comment>diff:</comment>' . PHP_EOL . $diff, OutputInterface::VERBOSITY_DEBUG);
 
             $this->fileSystem->dumpFile($diffFilePath, $diff);
@@ -113,5 +110,29 @@ class GenerateCommand extends Command
         $output->writeln('<info>done</info>');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * @return string[] Missed directories
+     */
+    private function checkEnvironment(): array
+    {
+        $omissions = [];
+
+        $vendor = 'vendor';
+        if (!file_exists($this->cwd . '/' . $vendor) || is_file($this->cwd . '/' . $vendor)) {
+            $omissions[] = $vendor;
+        }
+
+        $composer = 'composer.json';
+        if (!file_exists($this->cwd . '/' . $composer) || !is_file($this->cwd . '/' . $composer)) {
+            $omissions[] = $composer;
+        }
+
+        if (!file_exists($this->cwd . '/' . $this->targetDir) || is_file($this->cwd . '/' . $this->targetDir)) {
+            $omissions[] = $this->targetDir;
+        }
+
+        return $omissions;
     }
 }

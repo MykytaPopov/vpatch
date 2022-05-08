@@ -7,15 +7,8 @@ namespace MykytaPopov\VPatch;
 interface PathResolverInterface
 {
     /**
-     * Check if current working dir is root of the project and there are vendor with composer.json
+     * Parse relative path relatively to vendor package name
      *
-     * @param string $cwd Current working dir
-     *
-     * @return bool
-     */
-    public function checkCWD(string $cwd): bool;
-
-    /**
      * @param string $path
      *
      * @return string
@@ -23,9 +16,11 @@ interface PathResolverInterface
     public function parseRelativePath(string $path): string;
 
     /**
+     * Parse vendor package name form the provided path
+     *
      * @param string $path
      *
      * @return string
      */
-    public function parseVendorPackageNames(string $path): string;
+    public function parseVendorPackageName(string $path): string;
 }

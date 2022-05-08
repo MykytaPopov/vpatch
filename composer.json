@@ -15,13 +15,18 @@
         "symfony/dependency-injection": ">=3.4",
         "symfony/yaml": "^5.4"
     },
+    "require-dev": {
+        "symfony/test-pack": "^1.0"
+    },
     "autoload": {
         "psr-4": {
             "MykytaPopov\\VPatch\\": "src/"
         }
     },
-    "bin": ["bin/vpatch"],
-    "require-dev": {
-        "symfony/test-pack": "^1.0"
-    }
+    "autoload-dev": {
+        "psr-4": {
+            "MykytaPopov\\VPatch\\Tests\\": "tests/"
+        }
+    },
+    "bin": ["bin/vpatch"]
 }

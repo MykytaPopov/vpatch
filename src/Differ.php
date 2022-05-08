@@ -16,9 +16,9 @@ class Differ implements DifferInterface
     /**
      * @inheritdoc
      */
-    public function compare(string $modifiedFileName, string $originFileName): string
+    public function compare(string $vendorFilePath, string $maskFilePath): string
     {
-        $command = "git diff --no-index {$originFileName} {$modifiedFileName}";
+        $command = "git diff --no-index {$maskFilePath} {$vendorFilePath}";
 
         $stdOut = shell_exec($command);
 
@@ -26,22 +26,23 @@ class Differ implements DifferInterface
             return '';
         }
 
-        return $this->clearDiff($stdOut, $modifiedFileName, $originFileName);
+        return $this->clearDiff($stdOut, $vendorFilePath, $maskFilePath);
     }
 
     /**
      * Set proper paths in the diff, remove old file names and set related path
      *
      * @param string $diff Diff to clear
-     * @param string $modifiedFileName
-     * @param string $originFileName
+     * @param string $vendorFilePath
+     * @param string $maskFilePath
      *
      * @return string
      */
-    private function clearDiff(string $diff, string $modifiedFileName, string $originFileName): string
+    private function clearDiff(string $diff, string $vendorFilePath, string $maskFilePath): string
     {
-        $relativePath = $this->pathResolver->parseRelativePath($originFileName);
+        $relativePath = $this->pathResolver->parseRelativePath($vendorFilePath);
 
-        return str_replace([$originFileName, $modifiedFileName], $relativePath, $diff);
+        $diff = str_replace('\ No newline at end of file' . PHP_EOL, '', $diff);
+        return str_replace([$maskFilePath, $vendorFilePath], $relativePath, $diff);
     }
 }
