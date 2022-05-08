@@ -76,7 +76,10 @@ class GenerateCommand extends Command
             return self::FAILURE;
         }
 
-        foreach ($this->finder->findFilesToCompare($cwd . '/vpatch') as $file) {
+        $files = $this->finder->findFilesToCompare($cwd . '/vpatch');
+
+        var_dump($files);
+        foreach ($files as $file) {
             $output->writeln(
                 "<comment>Working on file:</comment> {$file->getPath()}",
                 OutputInterface::VERBOSITY_DEBUG

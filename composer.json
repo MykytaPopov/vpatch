@@ -20,5 +20,8 @@
             "MykytaPopov\\VPatch\\": "src/"
         }
     },
-    "bin": ["bin/vpatch"]
+    "bin": ["bin/vpatch"],
+    "require-dev": {
+        "symfony/test-pack": "^1.0"
+    }
 }
