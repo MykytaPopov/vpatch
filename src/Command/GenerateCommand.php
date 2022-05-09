@@ -13,6 +13,9 @@ use Symfony\Component\Filesystem\Filesystem;
 
 class GenerateCommand extends AbstractCommand
 {
+    public const SUCCESS = 0;
+    public const FAILURE = 1;
+
     public const DIFF_EXT = 'diff';
 
     /** @inerhitDoc */
