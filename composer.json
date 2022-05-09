@@ -13,7 +13,7 @@
         "symfony/config": ">=3.4",
         "symfony/console": ">=3.4",
         "symfony/dependency-injection": ">=3.4",
-        "symfony/yaml": "^5.4"
+        "symfony/yaml": ">=3.4"
     },
     "require-dev": {
         "symfony/test-pack": "^1.0"
