@@ -6,7 +6,6 @@ namespace MykytaPopov\VPatch\Command;
 
 use MykytaPopov\VPatch\DifferInterface;
 use MykytaPopov\VPatch\FinderInterface;
-use MykytaPopov\VPatch\PathResolverInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -14,6 +13,8 @@ use Symfony\Component\Filesystem\Filesystem;
 
 class GenerateCommand extends AbstractCommand
 {
+    public const DIFF_EXT = 'diff';
+
     /** @inerhitDoc */
     protected static $defaultName = 'generate';
 
@@ -85,7 +86,7 @@ class GenerateCommand extends AbstractCommand
             $maskFilePath = 'vpatch/' . $file->getRelativePathname();
             $output->writeln("<info>mask:</info> {$maskFilePath}");
 
-            $diffFilePath = $maskFilePath . '.diff';
+            $diffFilePath = $maskFilePath . '.' . self::DIFF_EXT;
             if (file_exists($diffFilePath) && !$input->getOption('force')) {
                 $output->writeln(["<comment>diff already exists:</comment> {$diffFilePath}", $this->separator]);
 

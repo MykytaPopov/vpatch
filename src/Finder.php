@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace MykytaPopov\VPatch;
 
+use MykytaPopov\VPatch\Command\GenerateCommand;
+
 class Finder implements FinderInterface
 {
     /**
@@ -16,7 +18,7 @@ class Finder implements FinderInterface
         $iterator = $symfonyFinder
             ->files()
             ->in($path)
-            ->notName('*.diff');
+            ->notName('*.' . GenerateCommand::DIFF_EXT);
 
         return iterator_to_array($iterator);
     }
