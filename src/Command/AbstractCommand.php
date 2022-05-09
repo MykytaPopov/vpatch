@@ -10,6 +10,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class AbstractCommand extends Command
 {
+    public const SUCCESS = 0;
+    public const FAILURE = 1;
+
     protected string $separator = '================================';
 
     /** @var string Current Working Dir */
